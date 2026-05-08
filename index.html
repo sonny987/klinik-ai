@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<meta name="description" content="KlinikAI – Dansk klinisk AI-dokumentation til sygehus og privatklinik">
+<title>KlinikAI</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a1628;
+  --bg2: #0f1e38;
+  --bg3: #162340;
+  --surface: #1a2a4a;
+  --surface2: #1f3255;
+  --border: rgba(100,160,255,0.12);
+  --border2: rgba(100,160,255,0.22);
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent-glow: rgba(59,130,246,0.18);
+  --text: #e8f0ff;
+  --text2: #8ba5cc;
+  --text3: #5a7a9e;
+  --green: #10b981;
+  --green-bg: rgba(16,185,129,0.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.12);
+  --teal: #14b8a6;
+  --teal-bg: rgba(20,184,166,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-display: 'DM Serif Display', serif;
+  --font: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo-text { font-family: var(--font-display); font-size: 1.3rem; color: var(--text); }
+.logo-sub { font-size: 11px; color: var(--text3); margin-top: -2px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.api-badge {
+  font-size: 11px; padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.api-badge.connected { color: var(--green); border-color: rgba(16,185,129,0.3); background: var(--green-bg); }
+.api-badge:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* LAYOUT */
+.app { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 65px); }
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+}
+.sidebar-section { margin-bottom: 1.5rem; }
+.sidebar-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  padding: 0 6px;
+}
+.spec-group { margin-bottom: 6px; }
+.spec-group-title {
+  font-size: 11px; color: var(--text3);
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.spec-group-title:hover { color: var(--text2); }
+.spec-group-title .arrow { font-size: 9px; transition: transform 0.2s; }
+.spec-group-title.open .arrow { transform: rotate(90deg); }
+.spec-items { display: none; padding-left: 12px; }
+.spec-group-title.open + .spec-items { display: block; }
+.spec-item {
+  font-size: 13px; color: var(--text2);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.spec-item:hover { background: var(--surface); color: var(--text); }
+.spec-item.active { background: var(--accent-glow); color: var(--accent2); border-left: 2px solid var(--accent); }
+.spec-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* MAIN */
+.main { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; max-width: 900px; }
+
+/* CONTROL ROW */
+.control-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.select-group label {
+  font-size: 11px; color: var(--text3);
+  display: block; margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+select {
+  width: 100%; padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7a9e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color 0.2s;
+}
+select:focus { border-color: var(--accent); }
+
+/* INPUT AREA */
+.input-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.input-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.input-toolbar-left { display: flex; align-items: center; gap: 8px; }
+.toolbar-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+.btn-mic {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-mic:hover { border-color: var(--accent); color: var(--accent2); }
+.btn-mic.recording { background: var(--red-bg); border-color: var(--red); color: var(--red); animation: pulse 1.5s infinite; }
+.btn-mic .mic-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.char-count { font-size: 11px; color: var(--text3); }
+textarea {
+  width: 100%; padding: 14px;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  resize: none;
+  min-height: 130px;
+}
+textarea::placeholder { color: var(--text3); }
+
+/* MODULES BADGES */
+.modules-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.mod-badge {
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+/* GENERATE BTN */
+.btn-generate {
+  width: 100%; padding: 13px;
+  background: var(--accent);
+  border: none; border-radius: var(--radius);
+  color: #fff;
+  font-size: 15px; font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-generate:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-generate:active { transform: scale(0.99); }
+.btn-generate:disabled { background: var(--surface2); color: var(--text3); cursor: not-allowed; transform: none; }
+
+/* OUTPUT */
+.output-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: none;
+}
+.output-card.visible { display: block; }
+.output-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.output-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+.output-actions { display: flex; gap: 8px; }
+.btn-copy, .btn-clear {
+  font-size: 12px; padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-copy:hover { border-color: var(--accent); color: var(--accent2); }
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
+.output-content {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+.cursor-blink { display: inline-block; width: 2px; height: 16px; background: var(--accent); animation: blink 0.8s step-end infinite; vertical-align: text-bottom; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* STATUS BAR */
+.status-bar {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text3);
+  padding: 8px 0;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+.status-dot.working { background: var(--amber); animation: pulse 1s infinite; }
+.status-dot.done { background: var(--green); }
+.status-dot.error { background: var(--red); }
+
+/* API MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 420px;
+  max-width: 95vw;
+}
+.modal h2 { font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
+.modal input {
+  width: 100%; padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px; outline: none;
+  margin-bottom: 12px;
+}
+.modal input:focus { border-color: var(--accent); }
+.modal-btns { display: flex; gap: 8px; }
+.btn-save {
+  flex: 1; padding: 10px;
+  background: var(--accent); border: none;
+  border-radius: var(--radius-sm);
+  color: #fff; font-size: 14px; font-weight: 500;
+  font-family: var(--font); cursor: pointer;
+}
+.btn-cancel {
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2); font-size: 14px;
+  font-family: var(--font); cursor: pointer;
+}
+
+/* SPECIALITET CHIP */
+.spec-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; padding: 6px 12px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 999px;
+  color: var(--accent2);
+  margin-bottom: 10px;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .control-row { grid-template-columns: 1fr 1fr; }
+  .main { padding: 1rem; }
+}
+
+/* PWA install banner */
+.install-bar {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 10px 1.5rem;
+  background: var(--accent-glow);
+  border-bottom: 1px solid rgba(59,130,246,0.2);
+  font-size: 13px;
+}
+.install-bar.show { display: flex; }
+.btn-install {
+  padding: 5px 14px;
+  background: var(--accent);
+  border: none; border-radius: 999px;
+  color: #fff; font-size: 12px;
+  font-family: var(--font); cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="install-bar" id="installBar">
+  <span>Installer KlinikAI som app på din enhed</span>
+  <button class="btn-install" onclick="installPWA()">Installer</button>
+</div>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">⚕</div>
+    <div>
+      <div class="logo-text">KlinikAI</div>
+      <div class="logo-sub">Dansk klinisk dokumentation</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="api-badge" id="apiBadge" onclick="openModal()">⚙ API-nøgle</div>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sygehus & Specialer</div>
+
+      <div class="spec-group">
+        <div class="spec-group-title open" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> OUH – Neurologisk Afd. N
+        </div>
+        <div class="spec-items">
+          <div class="spec-item active" onclick="setSpec('neurologi_stroke')" data-spec="neurologi_stroke">
+            <span class="spec-dot" style="background:#3b82f6"></span>Stroke / Apopleksi
+          </div>
+          <div class="spec-item" onclick="setSpec('neurologi_epilepsi')" data-spec="neurologi_epilepsi">
+            <span class="spec-dot" style="background:#3b82f6"></span>Epilepsi
+          </div>
+          <div class="spec-item" onclick="setSpec('neurologi_ms')" data-spec="neurologi_ms">
+            <span class="spec-dot" style="background:#3b82f6"></span>Multipel Sklerose
+          </div>
+          <div class="spec-item" onclick="setSpec('neurologi_parkinsons')" data-spec="neurologi_parkinsons">
+            <span class="spec-dot" style="background:#3b82f6"></span>Parkinsons sygdom
+          </div>
+          <div class="spec-item" onclick="setSpec('neurologi_rehab')" data-spec="neurologi_rehab">
+            <span class="spec-dot" style="background:#3b82f6"></span>Neurologisk rehabilitering
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Kardiologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('kardiologi_akut')" data-spec="kardiologi_akut"><span class="spec-dot" style="background:#ef4444"></span>Akut koronarsyndrom</div>
+          <div class="spec-item" onclick="setSpec('kardiologi_hjertesvigt')" data-spec="kardiologi_hjertesvigt"><span class="spec-dot" style="background:#ef4444"></span>Hjertesvigt</div>
+          <div class="spec-item" onclick="setSpec('kardiologi_arytmi')" data-spec="kardiologi_arytmi"><span class="spec-dot" style="background:#ef4444"></span>Arytmi / AF</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Ortopædi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('ortopædi_fraktur')" data-spec="ortopædi_fraktur"><span class="spec-dot" style="background:#f59e0b"></span>Fraktur / osteosyntese</div>
+          <div class="spec-item" onclick="setSpec('ortopædi_protese')" data-spec="ortopædi_protese"><span class="spec-dot" style="background:#f59e0b"></span>Protese (hofte/knæ)</div>
+          <div class="spec-item" onclick="setSpec('ortopædi_ryg')" data-spec="ortopædi_ryg"><span class="spec-dot" style="background:#f59e0b"></span>Ryg / columna</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Akutmedicin
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('akut_modtagelse')" data-spec="akut_modtagelse"><span class="spec-dot" style="background:#10b981"></span>Akutmodtagelse</div>
+          <div class="spec-item" onclick="setSpec('akut_sepsis')" data-spec="akut_sepsis"><span class="spec-dot" style="background:#10b981"></span>Sepsis</div>
+          <div class="spec-item" onclick="setSpec('akut_trauma')" data-spec="akut_trauma"><span class="spec-dot" style="background:#10b981"></span>Trauma</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Intensiv (ITA)
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('intensiv')" data-spec="intensiv"><span class="spec-dot" style="background:#8b5cf6"></span>Intensiv pleje</div>
+          <div class="spec-item" onclick="setSpec('intensiv_ventilator')" data-spec="intensiv_ventilator"><span class="spec-dot" style="background:#8b5cf6"></span>Ventilatorbehandling</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Onkologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('onkologi')" data-spec="onkologi"><span class="spec-dot" style="background:#14b8a6"></span>Kræftbehandling</div>
+          <div class="spec-item" onclick="setSpec('onkologi_palliativ')" data-spec="onkologi_palliativ"><span class="spec-dot" style="background:#14b8a6"></span>Palliativ pleje</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Psykiatri
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('psykiatri')" data-spec="psykiatri"><span class="spec-dot" style="background:#ec4899"></span>Psykiatri</div>
+          <div class="spec-item" onclick="setSpec('psykiatri_retspsyk')" data-spec="psykiatri_retspsyk"><span class="spec-dot" style="background:#ec4899"></span>Retspsykiatri</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Øre-Næse-Hals (ØNH)
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('onh_generel')" data-spec="onh_generel"><span class="spec-dot" style="background:#06b6d4"></span>ØNH generel</div>
+          <div class="spec-item" onclick="setSpec('onh_horetab')" data-spec="onh_horetab"><span class="spec-dot" style="background:#06b6d4"></span>Høretab / audiologi</div>
+          <div class="spec-item" onclick="setSpec('onh_hals')" data-spec="onh_hals"><span class="spec-dot" style="background:#06b6d4"></span>Hals / larynx</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Øjenafdeling
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('ojne')" data-spec="ojne"><span class="spec-dot" style="background:#6366f1"></span>Øjensygdomme</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Gynækologi & Obstetrik
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('gyn')" data-spec="gyn"><span class="spec-dot" style="background:#f472b6"></span>Gynækologi</div>
+          <div class="spec-item" onclick="setSpec('obstetrik')" data-spec="obstetrik"><span class="spec-dot" style="background:#f472b6"></span>Obstetrik / fødsel</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Pædiatri
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('pædiatri')" data-spec="pædiatri"><span class="spec-dot" style="background:#fb923c"></span>Børneafdeling</div>
+          <div class="spec-item" onclick="setSpec('neonatologi')" data-spec="neonatologi"><span class="spec-dot" style="background:#fb923c"></span>Neonatologi</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Geriatri
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('geriatri')" data-spec="geriatri"><span class="spec-dot" style="background:#a3a3a3"></span>Geriatri</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Urologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('urologi')" data-spec="urologi"><span class="spec-dot" style="background:#34d399"></span>Urologi</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Kirurgi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('kirurgi_abdomen')" data-spec="kirurgi_abdomen"><span class="spec-dot" style="background:#84cc16"></span>Abdominalkirurgi</div>
+          <div class="spec-item" onclick="setSpec('kirurgi_kar')" data-spec="kirurgi_kar"><span class="spec-dot" style="background:#84cc16"></span>Karkirurgi</div>
+          <div class="spec-item" onclick="setSpec('kirurgi_plast')" data-spec="kirurgi_plast"><span class="spec-dot" style="background:#84cc16"></span>Plastikkirurgi</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Dermatologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('dermatologi')" data-spec="dermatologi"><span class="spec-dot" style="background:#fbbf24"></span>Dermatologi</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Reumatologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('reumatologi')" data-spec="reumatologi"><span class="spec-dot" style="background:#c084fc"></span>Reumatologi</div>
+        </div>
+      </div>
+
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Endokrinologi
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('endokrinologi')" data-spec="endokrinologi"><span class="spec-dot" style="background:#67e8f9"></span>Diabetes / endokrin</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Privatklinik</div>
+      <div class="spec-group">
+        <div class="spec-group-title" onclick="toggleGroup(this)">
+          <span class="arrow">▶</span> Speciallæge / privat
+        </div>
+        <div class="spec-items">
+          <div class="spec-item" onclick="setSpec('privat_almen')" data-spec="privat_almen"><span class="spec-dot" style="background:#94a3b8"></span>Almen praksis</div>
+          <div class="spec-item" onclick="setSpec('privat_onh')" data-spec="privat_onh"><span class="spec-dot" style="background:#94a3b8"></span>ØNH privatklinik</div>
+          <div class="spec-item" onclick="setSpec('privat_ortopædi')" data-spec="privat_ortopædi"><span class="spec-dot" style="background:#94a3b8"></span>Ortopædkirurg privat</div>
+          <div class="spec-item" onclick="setSpec('privat_psykolog')" data-spec="privat_psykolog"><span class="spec-dot" style="background:#94a3b8"></span>Psykolog / psykiater</div>
+          <div class="spec-item" onclick="setSpec('privat_fysio')" data-spec="privat_fysio"><span class="spec-dot" style="background:#94a3b8"></span>Fysioterapi klinik</div>
+          <div class="spec-item" onclick="setSpec('privat_tandlæge')" data-spec="privat_tandlæge"><span class="spec-dot" style="background:#94a3b8"></span>Tandlæge / tandklinik</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="spec-chip" id="specChip">⚕ Neurologisk Afd. N – Stroke / Apopleksi</div>
+
+    <div class="control-row">
+      <div class="select-group">
+        <label>Faggruppe</label>
+        <select id="faggruppe">
+          <option value="sosu">SOSU-assistent</option>
+          <option value="sygeplejerske">Sygeplejerske</option>
+          <option value="laege">Læge</option>
+          <option value="fysio">Fysioterapeut</option>
+          <option value="ergo">Ergoterapeut</option>
+          <option value="jordemoder">Jordemoder</option>
+          <option value="portør">Portørkoordinator</option>
+          <option value="bioanalytiker">Bioanalytiker</option>
+          <option value="radiograf">Radiograf</option>
+          <option value="farmaceut">Farmaceut / farmakonom</option>
+          <option value="sosu_hjemme">SOSU (hjemmepleje)</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <label>Dokumenttype</label>
+        <select id="doctype">
+          <option value="plejeplan">Plejeplan (FIDO)</option>
+          <option value="statusnotat">Statusnotat</option>
+          <option value="overflytning">Overflytningsnotat (ISBAR)</option>
+          <option value="epikrise">Epikrise</option>
+          <option value="triagering">Triagering</option>
+          <option value="medicinnotat">Medicinnotat</option>
+          <option value="obs">Observationsnotat</option>
+          <option value="konference">Konferencenotat</option>
+          <option value="samtale">Patientsamtalenotat</option>
+          <option value="udskrivelse">Udskrivelsesnotat</option>
+          <option value="fritekst">Fritekst / diktering</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <label>Sprog / niveau</label>
+        <select id="niveau">
+          <option value="faglig">Faglig (EPJ-klar)</option>
+          <option value="let">Let dansk (pårørende)</option>
+          <option value="kort">Kort / bullet-form</option>
+          <option value="udvidet">Udvidet / detaljeret</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-toolbar">
+        <div class="input-toolbar-left">
+          <span class="toolbar-label">Diktering / råtekst</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn-mic" id="micBtn" onclick="toggleMic()">
+            <span class="mic-dot"></span>
+            <span id="micLabel">Dikter</span>
+          </button>
+          <span class="char-count" id="charCount">0 tegn</span>
+        </div>
+      </div>
+      <textarea id="inputText"
+        placeholder="Skriv eller dikter her... f.eks.: 'patient 68 år, mand, indlagt med pludselig indsættende hæmisymptomer til venstre side, GCS 14, NIHSS 4, afasisk, blodtryk 178/96, sendt til CT-scanning...'"
+        oninput="updateCount()"></textarea>
+      <div class="modules-row" id="modulesBadges"></div>
+    </div>
+
+    <button class="btn-generate" id="genBtn" onclick="generate()">
+      <span>Generer klinisk dokumentation</span>
+    </button>
+
+    <div class="status-bar" id="statusBar" style="display:none;">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText"></span>
+    </div>
+
+    <div class="output-card" id="outputCard">
+      <div class="output-toolbar">
+        <span class="output-label">Struktureret output — EPJ-klar</span>
+        <div class="output-actions">
+          <button class="btn-copy" onclick="copyOutput()">Kopiér</button>
+          <button class="btn-clear" onclick="clearOutput()">Ryd</button>
+        </div>
+      </div>
+      <div class="output-content" id="outputContent"></div>
+    </div>
+  </main>
+</div>
+
+<!-- API MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>API-indstillinger</h2>
+    <p>Indtast din Anthropic API-nøgle. Den gemmes lokalt i din browser og sendes aldrig til vores servere.</p>
+    <input type="password" id="apiInput" placeholder="sk-ant-api03-..." />
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveKey()">Gem nøgle</button>
+      <button class="btn-cancel" onclick="closeModal()">Annuller</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── SPECIALER / PROMPTS ───────────────────────────────────────────────
+const SPECS = {
+  neurologi_stroke: {
+    label: "Neurologisk Afd. N – Stroke / Apopleksi",
+    color: "#3b82f6",
+    modules: ["GCS","NIHSS","mRS","tPA/Trombolyse","Afasi","Dysfagi","FVC","FAST","AKS","Neglect"],
+    prompt: `Du er en specialiseret dansk klinisk AI for Neurologisk Afdeling N, OUH. Du er ekspert i stroke og apopleksi. Du kender følgende til bunds:
+SCORINGER: GCS (Glasgow Coma Scale 3-15), NIHSS (National Institutes of Health Stroke Scale 0-42), mRS (modified Rankin Scale 0-6), Barthel-indeks, NIHSS subskalaer.
+BEHANDLING: tPA-trombolyse (0,9 mg/kg, max 90mg), trombektomi, tidsvindue, blodfortyndende behandling, statin, antihypertensiv behandling, sekundær forebyggelse.
+SYMPTOMER: hæmiplegi, hemiplegi, afasi (ekspressiv/impressiv/global), dysartri, neglect, synsfeltsudfald, ataksi, dysfagi, diplopi.
+UNDERSØGELSER: CT-scanning, MRI-DWI, CTA, MRA, EKG, ekkografi, Holter-monitorering, LP, karotis-duplex.
+KOMPLIKATIONER: hjerneødem, transtentoriel herniation, hæmoragisk transformation, DVT, lungeemboli, pneumoni, urinvejsinfektion, epilepsi.
+PLEJE: dysfagi-screening, kostform (tyk/tynd væske, cremet kost), mobilisering, tryksår-forebyggelse, FVC-monitorering, kateter.
+REHAB: tidlig mobilisering, ergoterapi, taleterapi, fysioterapi, hjerneplasticitet.`
+  },
+  neurologi_epilepsi: {
+    label: "Neurologisk Afd. N – Epilepsi",
+    color: "#3b82f6",
+    modules: ["EEG","Status epilepticus","Anfaldsbeskrivelse","Antiepileptika","SUDEP"],
+    prompt: `Du er specialiseret i epilepsi og anfaldssygdomme. Du kender:
+ANFALD: fokale anfald (simpelt/komplekst), generaliserede (tonisk-klonisk, absence, myoklonus, atonisk), status epilepticus, postiktal fase, Todd's parese.
+BEHANDLING: levetiracetam (Keppra), lamotrigin, valproat, karbamazepin, lacosamid, diazepam, lorazepam ved status epilepticus. Benzodiazepiner IV/rektalt.
+UNDERSØGELSE: EEG, video-EEG, MRI, blodprøver (antiepileptika-niveauer), neuropsykologisk vurdering.
+PLEJE: anfaldsdokumentation (type, varighed, adfærd), sikkerhed, køreforbud, SUDEP-information.`
+  },
+  neurologi_ms: {
+    label: "Neurologisk Afd. N – Multipel Sklerose",
+    color: "#3b82f6",
+    modules: ["EDSS","Relaps","DMT","MRI","Fatigue"],
+    prompt: `Du er specialiseret i MS (multipel sklerose). Du kender:
+SYGDOMSTYPER: RRMS, SPMS, PPMS, CIS (klinisk isoleret syndrom).
+SCORINGER: EDSS (Expanded Disability Status Scale 0-10), MSSS, MSIS-29.
+BEHANDLING: methylprednisolon ved relaps, DMT (dimethylfumarat, natalizumab, okrelizumab, siponimod, ofatumumab, kladribin), immunsuppression.
+SYMPTOMER: synsnervebetændelse, lhermitte-tegn, fatigue, spasticitet, kognition, blæredysfunktion, seksuel dysfunktion.
+UNDERSØGELSE: MRI (T1/T2/FLAIR, gadolinium), LP (oligoklonale bånd), evokerede potentialer.`
+  },
+  neurologi_parkinsons: {
+    label: "Neurologisk Afd. N – Parkinsons",
+    color: "#3b82f6",
+    modules: ["UPDRS","Levodopa","DBS","Dyskinesi","Non-motor"],
+    prompt: `Du er specialiseret i Parkinsons sygdom og parkinsonisme. Du kender:
+KLASSIFIKATION: idiopatisk Parkinsons, atypisk parkinsonisme (MSA, PSP, LBD, CBD).
+SCORINGER: UPDRS (Unified Parkinson's Disease Rating Scale), Hoehn & Yahr, MoCA.
+BEHANDLING: levodopa/carbidopa, dopaminagonister (pramipexol, ropinirol), MAO-B hæmmere (rasagilin, selegilin), COMT-hæmmere, DBS (deep brain stimulation), apomorfin, rotigotinplaster.
+KOMPLIKATIONER: dyskinesi, wearing-off, on-off fænomen, frysning (freezing of gait), ortostatisk hypotension, hallucinationer, demens, dysfagi.
+PLEJE: medicintider præcist overholdes, faldrisiko, ernæring, kommunikation.`
+  },
+  neurologi_rehab: {
+    label: "Neurologisk – Rehabilitering",
+    color: "#3b82f6",
+    modules: ["FIM","Barthel","ADL","Målsætning","Tværfaglig"],
+    prompt: `Du er specialiseret i neurologisk rehabilitering. Du kender:
+SCORINGER: FIM (Functional Independence Measure), Barthel-indeks, Modified Rankin Scale, Berg Balance Scale, 10MWT (10 meters ganghastighed), TUG (Timed Up and Go).
+TVÆRFAGLIG INDSATS: fysioterapeut (mobilisering, balance, styrke), ergoterapeut (ADL, hjælpemidler, kognition), talepædagog (afasi, dysfagi, kognition), neuropsykolog, socialrådgiver.
+MÅL: SMART-målsætning, rehabiliteringsplan, funktionsniveau ved indlæggelse/udskrivelse.
+HJÆLPEMIDLER: rollator, kørestol, AFO-skinne, kommunikationshjælpemidler.`
+  },
+  kardiologi_akut: {
+    label: "Kardiologi – Akut koronarsyndrom",
+    color: "#ef4444",
+    modules: ["STEMI","NSTEMI","Troponin","PCI","Trombolyse","EKG"],
+    prompt: `Du er specialiseret i akut kardiologi og koronarsyndrom. Du kender:
+DIAGNOSE: STEMI, NSTEMI, UAP. EKG-forandringer (ST-elevation, LBBB, T-invertering, Q-takker). Biomarkører: troponin I/T, CK-MB, BNP/NT-proBNP, CRP, D-dimer.
+BEHANDLING: PCI (perkutan koronar intervention), trombolyse, KAG (koronararteriografi), CABG. Medicin: aspirin, ticagrelor/clopidogrel, heparin, betablokkere, ACE-hæmmere, statiner, nitroglycerin, morfin, O2.
+KOMPLIKATIONER: kardiogent shock, hjertesvigt, arytmi, perikardit, aneurisma.
+VITALPARAMETRE: BT, P, SAT, EKG-monitorering, NIBP.`
+  },
+  kardiologi_hjertesvigt: {
+    label: "Kardiologi – Hjertesvigt",
+    color: "#ef4444",
+    modules: ["NYHA","EF","BNP","Diuretika","CRT"],
+    prompt: `Du er specialiseret i hjertesvigt. Du kender:
+KLASSIFIKATION: NYHA I-IV, HFrEF (EF<40%), HFmrEF (EF 40-49%), HFpEF (EF≥50%).
+BIOMARKØRER: BNP, NT-proBNP, troponin.
+BEHANDLING: ACE-hæmmere/ARB/ARNI (sacubitril/valsartan), betablokkere, MRA (spironolakton/eplerenon), SGLT2-hæmmere, diuretika (furosemid, bumetanid, thiazid), CRT (cardial resynchronization therapy), ICD, LVAD, hjerte-/lungetransplantation.
+MONITORERING: daglig vægtkontrol, væskebalance, ødemer, SAT, BT.`
+  },
+  kardiologi_arytmi: {
+    label: "Kardiologi – Arytmi",
+    color: "#ef4444",
+    modules: ["AF","CHA2DS2","Antikoagulation","Ablation","Pacemaker"],
+    prompt: `Du er specialiseret i arytmi og atrieflimmer. Du kender:
+ARYTMIER: atrieflimmer (AF), atrieflutter, SVT, VT, VF, bradykardi, SSS, AV-blok (grad I/II/III).
+SCORINGER: CHA₂DS₂-VASc (tromboembolisk risiko), HAS-BLED (blødningsrisiko).
+BEHANDLING: antikoagulation (warfarin, NOAK: apixaban, rivaroxaban, dabigatran, edoxaban), frekvensregulering (betablokkere, digoxin, verapamil), rytmekontrol (amiodaron, flecainid), DC-konvertering, ablation (pulmonal vene-isolation), pacemaker, ICD.`
+  },
+  ortopædi_fraktur: {
+    label: "Ortopædi – Fraktur / Osteosyntese",
+    color: "#f59e0b",
+    modules: ["AO-klassifikation","VAS/NRS","Osteosyntese","Kompartment","DVT-profylakse"],
+    prompt: `Du er specialiseret i ortopædkirurgi og frakturbehandling. Du kender:
+KLASSIFIKATION: AO/OTA frakturklassifikation, Garden-klassifikation (hoftefraktur), Neer-klassifikation (humerus), Schatzker (tibia plateau).
+BEHANDLING: osteosyntese (IMN, DHS, plader, skruer), gips, ortoser, ORIF (open reduction internal fixation), ekstern fiksation, fasciotomi (kompartmentsyndrom).
+KOMPLIKATIONER: kompartmentsyndrom (5 P'er: pain, pressure, pallor, paresthesia, paralysis), DVT/LE, infektion, pseudartrose, malunion, AVN (avaskulær nekrose), CRPS.
+PLEJE: elevation, is, neurocirkulatorisk kontrol (NCC), VAS smertescore, mobilisering, DVT-profylakse (LMWH, TED-strømper).`
+  },
+  ortopædi_protese: {
+    label: "Ortopædi – Protese",
+    color: "#f59e0b",
+    modules: ["THA","TKA","Mobilisering","Luksation","DVT-profylakse"],
+    prompt: `Du er specialiseret i protesekirurgi (hofte og knæ). Du kender:
+PROCEDURER: THA (total hoftealloplastik), TKA (total knæalloplastik), UKA (uni-kompartment knæ), revision.
+KOMPLIKATIONER: luksation (hofteprotese - forholdsregler), infektion (PJI), DVT/LE, nerveskade, protesefraktur, aseptisk løsning.
+MOBILISERING: fuld belastning vs. aflestet/touch down weight bearing, gang med hjælpemidler, ADL-hjælpemidler, trapper.
+PLEJE: sårpleje, DVT-profylakse (LMWH, kompressionsstrømper), smertebehandling (opioid/non-opioid), kotid/antiinflammatorisk, forhindring af luksation (hofteprotese-forholdsregler).`
+  },
+  ortopædi_ryg: {
+    label: "Ortopædi – Ryg / Columna",
+    color: "#f59e0b",
+    modules: ["VAS","Discusprolaps","Spinalstenose","Nerverodssyndrom","Fusion"],
+    prompt: `Du er specialiseret i rygkirurgi og columnalidelser. Du kender:
+DIAGNOSER: discusprolaps (L4/L5, L5/S1, cervikalt), spinalstenose, spondylolisthese, skoliose, fraktur (osteoporotisk, traumatisk), infektion (spondylodiscitis).
+SYMPTOMER: radikulopati, cauda equina-syndrom (akut kirurgisk indikation: urin/afføring, nedre ekstremitet lammelse), cervikogen myelopati.
+BEHANDLING: konservativ (fysioterapi, analgetika, epidural infiltration), operativ (discektomi, laminektomi, fusion/PLIF/TLIF, instrumentering).
+PLEJE: VAS smertescore, neurocirkulatorisk kontrol, rygsøjleforholdsregler, mobilisering.`
+  },
+  akut_modtagelse: {
+    label: "Akutmodtagelse",
+    color: "#10b981",
+    modules: ["NEWS2","ABCDE","ADAPT-triage","qSOFA","Sepsis-bundt"],
+    prompt: `Du er specialiseret i akutmedicin. Du kender:
+TRIAGE: ADAPT-triagering (Dansk: Rød/Orange/Gul/Grøn/Blå), NEWS2-score (0-20+), Manchester Triage System.
+ABCDE-TILGANG: Airway (frie luftveje, intubation), Breathing (SAT, RR, auskultation), Circulation (BT, P, kapillærrespons, IV-adgang), Disability (GCS, pupiller, blodsukker), Exposure (temperatur, inspektion).
+SEPSIS: qSOFA (ændret mental status, RR≥22, systolisk BT≤100), SIRS-kriterier, sepsis-bundt (blodkulturer, antibiotika inden 1 time, IV-væske, laktat).
+SMERTE: NRS 0-10, analgetisk stige, IV morfin, paracetamol, NSAID, ketamin.
+UNDERSØGELSE: EKG, blodprøver (hæmatologi, biokemi, koagulation, blodgas), røntgen, UL, CT.`
+  },
+  akut_sepsis: {
+    label: "Akutmodtagelse – Sepsis",
+    color: "#10b981",
+    modules: ["qSOFA","Sepsis-3","Laktat","Blodkultur","Antibiotika"],
+    prompt: `Du er specialiseret i sepsis og septisk shock. Du kender:
+DEFINITIONER: Sepsis-3 (livstruende organsvigt pga. dysreguleret respons på infektion), septisk shock (MAP<65 + laktat>2 trods væske).
+DIAGNOSTIK: blodkulturer (×2 før antibiotika), PCT, CRP, laktat, blodgas, urinstatus, røntgen thorax.
+BEHANDLING – GOLDEN HOUR: IV-antibiotika inden 1 time (empirisk breedspektrum), 30 ml/kg IV-væske (krist.), noradrenalin ved BT-fald, monitoring (CVK, KAD, arteriekateter).
+BUNDTER: Sepsis-1 (blodkultur, laktat, antibiotika), Hour-1 bundle.
+ORGANDYSFUNKTION: SOFA-score, AKI (akut nyreskade – KDIGO-kriterier), respirationssvigt, DIC, leverpåvirkning.`
+  },
+  akut_trauma: {
+    label: "Akutmodtagelse – Trauma",
+    color: "#10b981",
+    modules: ["ATLS","Primary survey","FAST","Traumeaktivering","Hæmostase"],
+    prompt: `Du er specialiseret i traumebehandling. Du kender:
+ATLS PROTOKOL: Primary survey (ABCDE), secondary survey (head-to-toe), FAST-scanning (focused assessment with sonography for trauma).
+TRAUMEAKTIVERING: kriterier (vitalparametre, mekanisme, skadeanatomI), traumeteam (traumeleder, anæstesi, kirurgi, sygeplejerske, radiograf).
+BEHANDLING: damage control resuscitation (transfusion ratio 1:1:1 - SAG:FFP:TK), TXA (tranexamsyre inden 3 timer), permissiv hypotension (MAP 50 ved ukontrolleret blødning), nødkirurgi, kompression, tourniquet.
+SKADER: pneumothorax (tension vs. åben), hæmothorax, bækkenfraktur, lang rørknogle-fraktur, traumatisk hjerneskade (TBI/GCS), abdominaltraume.`
+  },
+  intensiv: {
+    label: "Intensiv (ITA)",
+    color: "#8b5cf6",
+    modules: ["SOFA","APACHE II","Sedation/RASS","CAM-ICU","PICS"],
+    prompt: `Du er specialiseret i intensivmedicin. Du kender:
+SCORINGER: SOFA (Sequential Organ Failure Assessment), APACHE II/III, SAPS II, RASS (Richmond Agitation-Sedation Scale -5 til +4), CAM-ICU (delir-screening).
+ORGANSVIGT: respirationssvigt (P/F-ratio, ARDS Berlin-kriterier), cirkulationssvigt (MAP, CI, SVR), AKI (KDIGO-kriterier: kreatinin, diurese), leversvigt (bilirubin, koagulation), hæmatologisk (trombocytter, DIC), CNS (GCS, delir).
+BEHANDLING: MV (mekanisk ventilation: VC/PC/SIMV/BiPAP), HFNO, sedation (propofol, midazolam, dexmedetomidin), analgesi, vasopressorer (noradrenalin, vasopressin, adrenalin), CRRT (kontinuerlig renal erstatningsterapi), ECMO.
+PLEJESTANDARD: mundpleje, tryksår-profylakse, DVT-profylakse, tidlig ernæring (enteral), spontan åndedrætstest (SAT), opvågningsforsøg.
+PICS: Post-Intensive Care Syndrome – fysisk/kognitiv/psykisk påvirkning efter ITA-indlæggelse.`
+  },
+  intensiv_ventilator: {
+    label: "Intensiv – Ventilatorbehandling",
+    color: "#8b5cf6",
+    modules: ["Lungprotektiv","ARDS","PEEP","Proning","Weaning"],
+    prompt: `Du er specialiseret i mekanisk ventilation. Du kender:
+LUNGPROTEKTIV VENTILATION: Vt 6 ml/kg IBW, plateautryk <30 cmH₂O, driving pressure <15 cmH₂O, PEEP (titreringsstrategier), FiO₂.
+ARDS: Berlin-klassifikation (mild/moderat/svær baseret på P/F-ratio), proning (mavelejet >16 timer/dag), NMBA (neuromuskulær blokade), rekrutteringsmanøvre.
+WEANING: spontan åndedrætstest (SAT/SBT), extubationskriterier (RSBI, kraft, adfærd), NIV post-extubation, HFNO.
+KOMPLIKATIONER: VALI (ventilator-associeret lungeskade), VABP (ventilator-associeret pneumoni – VAP).`
+  },
+  onkologi: {
+    label: "Onkologi – Kræftbehandling",
+    color: "#14b8a6",
+    modules: ["ECOG","CTCAE","Kemo","Immunterapi","Stråle"],
+    prompt: `Du er specialiseret i onkologi. Du kender:
+PERFORMANCE STATUS: ECOG/WHO PS 0-5, Karnofsky 0-100%.
+BEHANDLING: kemoterapi (cytostatika: cisplatin, carboplatin, oxaliplatin, paclitaxel, docetaxel, gemcitabin, 5-FU, kapecitabin, FOLFOX, FOLFIRI), immunterapi (checkpoint-hæmmere: pembrolizumab, nivolumab, atezolizumab), målrettet behandling (tyrosinkinasehæmmere, monoklonale antistoffer), stråleterapi, hormonal terapi.
+BIVIRKNINGER – CTCAE: kvalme/opkastning (0-5 grad), neuropati, mucositis, alopeci, myelosuppression (neutropeni – G-CSF, febril neutropeni = akut), trombocytopeni, diarré, immunrelaterede bivirkninger (irAE: colitis, pneumonitis, hepatitis, endokrinopati).
+CAVE: neutropeni (ANC<0,5: risiko for febril neutropeni), ekstravasation, anafylaksi.`
+  },
+  onkologi_palliativ: {
+    label: "Onkologi – Palliativ pleje",
+    color: "#14b8a6",
+    modules: ["VAS/NRS","Palliationsplan","Morphin","Terminalpleje","Samtale"],
+    prompt: `Du er specialiseret i palliativ medicin. Du kender:
+SMERTEBEHANDLING: WHO's analgetiske stige, paracetamol, NSAID, opioid (morfin, oxycodon, fentanyl, buprenorfin – doser, opioidrotation), adjuvante analgetika (gabapentin, pregabalin, tricykliske, steroider, bisfosfonater).
+SYMPTOMKONTROL: kvalme (metoklopramid, ondansetron, haloperidol), obstipation (laktulase, macrogol, natriumpicosulfat), dyspnø (morfin, benzodiazepiner, HFNO, ventilator), angst/uro (midazolam, haloperidol, klonazepam).
+TERMINALPLEJE: palliativ sedering, ophør af livsforlængende behandling, "de fire samtaler" (mål/ønsker/værdier/frygter), do-not-resuscitate (DNR/DNAR), hjemmedød vs. hospice, pårørendestøtte.
+DOKUMENTATION: palliationsplan, livstestamente, behandlingsintensitet.`
+  },
+  psykiatri: {
+    label: "Psykiatri",
+    color: "#ec4899",
+    modules: ["GAF","PANSS","MADRS","Suiciderisiko","Tvangsbehandling"],
+    prompt: `Du er specialiseret i psykiatri. Du kender:
+SCORINGER: GAF (Global Assessment of Functioning 0-100), PANSS (positive/negative/generelle symptomer), MADRS, HAM-D, BPRS, Mini-PANSS, PHQ-9, GAD-7.
+DIAGNOSER: skizofreni, bipolar lidelse (mani/depression/blandingstilstand), svær depression, personlighedsforstyrrelser, OCD, PTSD, angstlidelser, psykose.
+BEHANDLING: antipsykotika (olanzapin, risperidon, quetiapin, aripiprazol, clozapin), antidepressiva (SSRI, SNRI, tricykliske, MAO-hæmmere), stemningsstabilisatorer (lithium, valproat, lamotrigin), benzodiazepiner, ECT.
+PSYKIATRILOVEN: tvangsindlæggelse, tvangsmedicinering, fiksering – betingelser, dokumentation, klageadgang.
+SUICIDERISIKOVURDERING: struktureret (Columbia-skala CSSRS), risikofaktorer, beskyttende faktorer, handleplan, sikkerhedsvurdering.`
+  },
+  psykiatri_retspsyk: {
+    label: "Psykiatri – Retspsykiatri",
+    color: "#ec4899",
+    modules: ["DOM","Mentalobservation","Tilsynspleje","§71","Vilkårslempelse"],
+    prompt: `Du er specialiseret i retspsykiatri. Du kender:
+LOVGRUNDLAG: straffelovens §16 (utilregnelighed), psykiatrilovens §35 (retslig behandlingsdom), mentalt ansvar, dom til behandling vs. anbringelse.
+DOKUMENTATION: statusattest, progressionsnotat, tilsyn, vilkårsændringer (lempelse/skærpelse).
+BEHANDLING: antipsykotika (depot: flupentixol, zuclopentixol, paliperidon, aripiprazol), LAI (long-acting injectable), samtalebehandling, psykoedukation.
+PLEJE: struktureret dagligdag, støtte-/kontaktperson, grænser og konsekvenser, sikkerhedsprocedurer, vold og trusler.`
+  },
+  onh_generel: {
+    label: "Øre-Næse-Hals (ØNH)",
+    color: "#06b6d4",
+    modules: ["Audiometri","Rhinoskopi","Laryngoskopi","Tonsillit","Epistaxis"],
+    prompt: `Du er specialiseret i øre-næse-hals-sygdomme. Du kender:
+ØRE: otitis media (akut/kronisk), otitis externa, serøs otitis media (SOM/sekretøre mellemørebetændelse), cholesteatom, Menières sygdom, benign paroksysmal positionel vertigo (BPPV – Dix-Hallpike/Epley-manøvre), akut unilateral vestibulær dysfunktion, akut sensoriellt høretab, tinitus. Audiometri (toneaudiometri, tympanometri, ABR).
+NÆS: rhinitis (allergisk/non-allergisk), rinosinusitis (akut/kronisk), nasal polypose, epistaxis (anterior/posterior – tamponnering, kauterisering), septal deviation, næsefraktur, FESS (funktionel endoskopisk sinuskirurgi).
+HALS: tonsillit (streptokokker – penicillin, peritonsillar absces – dræning), faryngit, laryngit, epiglottit (akut – luftvejstrussel), mononukleose, halscyster og -tumorer, struma, lymfadenopati. Laryngoskopi (direkte/fleksibelt), stroboskopi.
+KIRURGI: tonsillektomi, adenoidektomi, trommehindedræn (TVD/grommets), rhinoplastik, septumplastik, FESS.`
+  },
+  onh_horetab: {
+    label: "ØNH – Høretab / Audiologi",
+    color: "#06b6d4",
+    modules: ["Audiometri","Tympanometri","CI","Høreapparat","Tinitus"],
+    prompt: `Du er specialiseret i audiologi og høretab. Du kender:
+TYPER: konduktivt høretab (mekanisk hindring – mellemøre), sensorineuralt høretab (cochlea/hørenerve), blandet. Klassifikation: mildt (26-40 dB), moderat (41-60 dB), svært (61-80 dB), dybt (>81 dB).
+ÅRSAGER: præsbykusis (aldersrelateret), støjtraumatisk høretab, akut sensorineuralt høretab (IDIOPATHISK – steroid), Menières, ototoksicitet (cisplatin, aminoglykosider, loop-diuretika), vestibulært schwannom.
+BEHANDLING: høreapparatudpasning (BTE, ITE, RIC, BAHA), cochlear implant (CI) – kandidat, CI-aktivering og mapping.
+UNDERSØGELSE: toneaudiometri, tympanometri, reflexmåling, OAE (otoakustiske emissioner), ABR (auditiv hjernestamme-respons).`
+  },
+  onh_hals: {
+    label: "ØNH – Hals / Larynx",
+    color: "#06b6d4",
+    modules: ["Laryngoskopi","Stemmelidelser","Dysfagi","Larynxcancer","Trakeostomi"],
+    prompt: `Du er specialiseret i larynx og halskirurgi. Du kender:
+STEMMELIDELSER: dysfoni, stemmeknuder, stemmebåndsparese (uni-/bilateral – intubation, thyroideakirurgi, tumor), laryngitis, Reinkes ødem, laryngopharyngeal refluks (LPR).
+CANCER: larynxcancer (glottisk/supraglottisk/subglottisk), hypopharynxcancer, oropharynxcancer (HPV-relateret), tonsil cancer. TNM-klassifikation, behandling (stråleterapi, kemoterapi, kirurgi – laryngektomi, neck dissection).
+DYSFAGI: neurogenisk (stroke, MS, ALS), strukturel (web, struma, cancer, Zenker-divertikel). Undersøgelse: FEES (fleksibel endoskopisk evaluering af synkning), videofluoroskopi.
+KIRURGI: trakeostomi (årsag, pleje af trakeostomi, kanyleskift, dekanylering), laryngektomi, neck dissection, thyreoideakirurgi.`
+  },
+  ojne: {
+    label: "Øjenafdeling",
+    color: "#6366f1",
+    modules: ["VA","IOT","Katarakt","AMD","Glaukom","Retina"],
+    prompt: `Du er specialiseret i øjensygdomme (oftalmologi). Du kender:
+UNDERSØGELSE: visus (VA) – snellentavle, ETDRS, pinhole-test, tonometri (IOT – intraokulært tryk, normalt <21 mmHg), fundoskopi/ophthalmoskopi, spaltelampeundersøgelse, OCT (optical coherence tomography), synsfelt (perimetri), fluoresceinangiografi.
+DIAGNOSER: katarakt (linseudskiftning – fakoemulsifikation, IOL), glaukom (åbenvinkel: øget IOT + synsfeldsudfald + optikuspåvirkning; snævervinkel: akut anfald), AMD (tør/våd – anti-VEGF: ranibizumab, aflibercept, bevacizumab), diabetisk retinopati (nonproliferativ/proliferativ – laser, anti-VEGF, vitrektomi), retinal ablatio (nethindeløsning – kirurgi), conjunktivit (bakteriel/viral/allergisk), keratit, iritis/uveitis, skelen (strabismus), amblyopi.
+MEDICIN: øjendråber – antibiotika (kloramfenikol, tobramycin), steroider (dexamethason), antiglaukoma (latanoprost, timolol, brinzolamid, brimonidEn), antihistamin, kunstig tåre, pupildilaterende (tropicamid, phenylephedrin).`
+  },
+  gyn: {
+    label: "Gynækologi",
+    color: "#f472b6",
+    modules: ["FIGO","Colposkopi","Hysteroskopi","Endometriose","Ovarie"],
+    prompt: `Du er specialiseret i gynækologi. Du kender:
+DIAGNOSTIK: gynækologisk undersøgelse (speculum, bimanuelt), kolposkopi, hysteroskopi, laparoskopi, UL (transvaginal/abdominal), cytologi (smear, CIN-klassifikation 1-3/ASCUS/LSIL/HSIL), HPV-test, CA-125, HCG, AMH.
+DIAGNOSER: endometriose, adenomyose, myomer (uterus myomatosus), ovariecyster (funktionelle/endometriom/dermoide/maligne), PCOS (polycystisk ovariesyndrom – Rotterdam-kriterier), PID (pelvic inflammatory disease), vulvodyni, prolaps (POPQ-klassifikation).
+CANCER: cervixcancer (FIGO-stadiering, HPV-relateret), endometriecancer, ovariecancer (debulking, platinbaseret kemo).
+KIRURGI: hysterektomi (vaginal/laparoskopisk/abdominal), myomektomi, laparoskopisk ovariecystektomi, LEEP/konisation.
+MENSTRUATION: menorragi (kraftig: objektivt/subjektivt), dysmenorré, amenorré (primær/sekundær), perimenopause/menopause.`
+  },
+  obstetrik: {
+    label: "Obstetrik – Fødsel",
+    color: "#f472b6",
+    modules: ["CTG","Partogram","Apgar","Præeklampsi","Fødestilling"],
+    prompt: `Du er specialiseret i obstetrik og fødselshjælp. Du kender:
+GRAVIDITET: gestationsalder (GA), GUL (gravid uge), trimester, fosterovervågning (CTG – kardiotokografi), UL-scanning (nuchal translucens, morfologi, vækst, flow), prænatal diagnostik (NIPT, amniocentese, chorionbiobsi).
+KOMPLIKATIONER: præeklampsi (BT≥140/90 + proteinuri efter UGE 20), HELLP-syndrom (hæmolyse, eleveret leverenzymer, lav trombocytter), gestationsdiabetes (GDM – OGTT), placenta prævia, abruptio placentae, PROM (premature rupture of membranes), præterm fødsel (<37 uger).
+FØDSEL: partogram, fødestadier (åbningsfase/uddrivningsfase/efterbyrdfase), CTG-tolkning (reaktiv/ikke-reaktiv, decelerationer – type I/II/III), fetal scalp blod-pH, oxytocin, epidural, instrumentel forløsning (tang/vakuum), kejsersnit (akut/elektiv).
+NEONATAL: Apgar-score (1+5 minutter), neonatal genoplivning (NPR), umbilical pH.
+POST PARTUM: blødning (PPH – oxytocin, ergometrin, tranexamsyre, B-Lynch-sutur), barselsdepression, amning, episiotoml.`
+  },
+  pædiatri: {
+    label: "Pædiatri – Børneafdeling",
+    color: "#fb923c",
+    modules: ["PEWS","Apgar","Febervurdering","Bronkiolitis","STAMP"],
+    prompt: `Du er specialiseret i pædiatri. Du kender:
+SCORINGER: PEWS (Pediatric Early Warning Score), STAMP ernæringsvurdering, Westley croup score, Woods/Downes bronkiolitis score.
+FEBERVURDERING: NICE-trafiklys (grøn/gul/rød), feberkramper (simple/komplekse), meningitis-tegn (nakke stivhed, Kernig, Brudzinski, petekier), septikæmi (fulminant meningokoksepsis).
+RESPIRATORISKE: bronkiolitis (RSV – støttende behandling, HFNO), astma (PRAM-score, salbutamol, ipratropium, steroid, MgSO₄), croup (stridor, Westley-score, adrenalin, dexamethason), pneumoni, fremmedlegeme.
+GASTROINTESTINAL: dehydrering (mild/moderat/svær – oral vs. IV rehydrering), gastroenteritis, pylorus stenose (hypokloræmisk metabolisk alkalose), appendicitis, invagination.
+NEUROLOGI: feberkramp (benzodiazepiner), epilepsi (børn), meningitis/encephalitis.
+VÆKST: WHO-vækstkurver (højde/vægt/BMI/OFC), catch-up vækst, failure to thrive.
+VACCINATIONER: dansk vaccinationsprogram (2, 3, 5, 12 måneder, 5 år, 12 år, MFR, HPV).`
+  },
+  neonatologi: {
+    label: "Neonatologi",
+    color: "#fb923c",
+    modules: ["Apgar","NPR","Præterm","Hyperbilirubinæmi","NICU"],
+    prompt: `Du er specialiseret i neonatologi. Du kender:
+APGAR: 5 parametre (color/hjerte/respons/tonus/vejrtrækning) 0-2 point, vurderet ved 1+5+10 minutter.
+GENOPLIVNING: NPR (neonatal genoplivning – ABC: varme, tørre, stimulation, VPP, brystkompressioner, adrenalin).
+PRÆTERM: definition (<37 uger), grænser (22+0 til 34+0), RDS (respiratory distress syndrome – surfaktant, MV/CPAP), BPD (bronkopulmonær dysplasi), IVH (intraventrikulær blødning – Papile I-IV), NEC (nekrotiserende enterokolitis), ROP (retinopati hos præmature).
+HYPERBILIRUBINÆMI: fototerapi-tærskler (Bhutani-kurve), hæmolytisk årsag (rhesus/ABO-uforligelighed), kernikterus-risiko, bilirubin og albumin (B/A-ratio).
+METABOLISK: hypoglykæmi (glucose <2,6 mmol/L – behandling), hypotermi, sepsis-opsporing (blodkultur, CRP, LP).
+AMNING/ERNÆRING: brystmælk, tilskudsernæring, sondernæring (OGS/NGS), parenteral ernæring.`
+  },
+  geriatri: {
+    label: "Geriatri",
+    color: "#a3a3a3",
+    modules: ["MFS","Barthel","MoCA","Polyfarmaci","Delirium"],
+    prompt: `Du er specialiseret i geriatri. Du kender:
+FUNKTIONSVURDERING: Barthel-indeks (0-100), ADL (activities of daily living – personlig hygiejne, påklædning, madning, toiletbesøg, forflytning, gang), IADL (instrumentel ADL – madlavning, økonomi, transport, medicinhåndtering).
+KOGNITIV SCREENING: MoCA (Montreal Cognitive Assessment 0-30), MMSE, klocktest, MIDAS. Demensformer: Alzheimers, vaskulær demens, Lewy body, frontotemporal.
+FALD: MFS (Morse Fall Scale 0-125), STRATIFY, faldårsager (medicin, ortostatisk hypotension, synsfejl, neurologisk), osteoporose (DEXA, T-score, FRAX), behandling (calcium, D-vitamin, bisfosfonater, denosumab).
+DELIRIUM: CAM (Confusion Assessment Method), hyperaktivt/hypoaktivt/blandet, udløsende faktorer (PINCH ME: Pain, Infection, Nutrition, Constipation, Hydration, Medication, Environment), ikke-farmakologisk håndtering.
+POLYFARMACI: Beers-kriterier (potentielt uhensigtsmæssig medicin hos ældre), START/STOPP-kriterier, medicingennemgang, deprescribing.
+ERNÆRING: MNA (Mini Nutritional Assessment), sarkopeni (EWGSOP2-kriterier – muskelmasse, styrke, funktion), ernæringsintervention.`
+  },
+  urologi: {
+    label: "Urologi",
+    color: "#34d399",
+    modules: ["PSA","IPSS","Uroflow","KAD","Blærecancer"],
+    prompt: `Du er specialiseret i urologi. Du kender:
+PROSTATA: BPH (benign prostatahyperplasi – IPSS-score 0-35), PSA (prostatspecifikt antigen, normalt <4 ng/ml, age-specifikt), prostatacancer (Gleason/ISUP-gradering, TRUS-biopsi, mpMRI, PSA-DT), behandling (aktiv overvågning, radikal prostatektomi RARP, stråleterapi, hormonel behandling/ADT, darolutamid, enzalutamid, abirateron, docetaxel).
+BLÆRELIDELSER: UVI (urinvejsinfektion – symptomer, dyrkning, antibiotika), OAB (overaktiv blære – mirabegron, solifenacin), stressinkontinens, blærecancer (makroskopisk hæmaturi → cystoskopi, TURBT, BCG-instillation).
+NYRER: nyrecancer (klarcellet, CT-staging, nefrektomi/ablation), nyresten (ESWL, URS, PCNL), hydronefrose.
+PROCEDURE: KAD (kateterisering – indikation, pleje, KAD-relateret UVI forebyggelse), uroflowmetri, blærescanning (ultralyd, PVR).`
+  },
+  kirurgi_abdomen: {
+    label: "Kirurgi – Abdomen",
+    color: "#84cc16",
+    modules: ["ASA","POSSUM","Appendicit","Ileus","Laparoskopi"],
+    prompt: `Du er specialiseret i abdominalkirurgi. Du kender:
+PRÆOPERATIV VURDERING: ASA-klassifikation (I-VI), POSSUM-score, risikostratificering, informeret samtykke.
+AKUTTE TILSTANDE: appendicitis (Alvarado-score, CT-diagnose, appendektomi – åben/laparoskopisk), perforation (fri luft, peritonitis – Hartmann, Hinchey-klassifikation), ileus (mekanisk/paralytisk – ventrikelsondeanlæggelse, IV-væske, evt. kirurgi), inkarcereret hernie, galdesygdom (cholecystit, choledocholitiasis – ERCP, cholecystektomi), pankreatitis (Ranson/APACHE II, CT Severity Index, ERCP ved obstruktiv).
+ELEKTIV KIRURGI: kolektomi (laparoskopisk/åben, ERAS-protokol), gastrektomi, DGER, hernieplastik (inguinal/umbilical/incisional), kolonkræft/rektumkræft (TME, stoma), anti-refluks (Nissen fundoplikation), bariatrisk kirurgi (gastric bypass, sleeve gastrektomi).
+POSTOPERATIVT: ERAS (Enhanced Recovery After Surgery), mobilisering, kostopstart, drænhåndtering, sårpleje, anastomoselæk-tegn.`
+  },
+  kirurgi_kar: {
+    label: "Kirurgi – Karkirurgi",
+    color: "#84cc16",
+    modules: ["ABI","ABCD","AAA","DVT","Antikoagulation"],
+    prompt: `Du er specialiseret i karkirurgi. Du kender:
+ARTERIELT: perifer arteriel sygdom (PAD – TASC II, Fontaine-klassifikation I-IV, Rutherford 0-6), ABI (ankel-arm indeks: normalt >0,9; kritisk iskæmi <0,5), akut iskæmi (6 P'er: pain, pallor, pulslessness, paresthesia, paralysis, poikilothermia – Rutherford klasse I/IIa/IIb/III), AAA (aortaaneurisme – diameter, EVAR/åben operation, ruptur).
+VENØST: DVT (klinisk sandsynlighed Wells-score, D-dimer, UL-kompression, antikoagulation – NOAK vs. LMWH), kronisk venøs insufficiens (CEAP-klassifikation C0-C6), varicer (EVLA, skumsklerosering, striptng), bensår (venøst/arterialt/blandingstype/diabetisk).
+KAROTIS: karotisstenose (NASCET-kriterier, CEA-indikation, asymptomatisk vs. symptomatisk).
+DIABETISK FOD: Wagner-klassifikation (0-5), neuropati, iskæmi, infektion, multidisciplinær (diabetesteam, karkirurgi, ortopædi, podolog).`
+  },
+  kirurgi_plast: {
+    label: "Kirurgi – Plastikkirurgi",
+    color: "#84cc16",
+    modules: ["Sårklassifikation","Lapper","Sår","Forbrænding","Rekonstruktion"],
+    prompt: `Du er specialiseret i plastikkirurgi og rekonstruktiv kirurgi. Du kender:
+SÅR: sårklassifikation (akut/kronisk, rene/kontaminerede/inficerede), sårrevision, primær/sekundær/tertiær lukning, sårbehandlingsprincipper (debridement, fuktig sårbehandling, VAC-behandling), hudtransplantation (split/fuldhudsplastik, donor- og modtagersteder).
+LAPPER: lokal (advancement, rotation, transpositon, Z-plastik), regional, fri lap (mikrokirurgi, TRAM, DIEP, latissimus dorsi, anterolateral thigh).
+FORBRÆNDINGER: TBSA (total body surface area – Lund & Browder, reglen om 9), klassifikation (superficiel/delvis/fuld tykkelse), Parkland-formlen (IV-væske første 24 timer), sår-excision og hudtransplantation, eskarotomi, brandsårscentrum.
+REKONSTRUKTIV KIRURGI: brystrekonstruktion (implant/ekspander, DIEP, latissimus dorsi), ansigtsrekonstruktion, talerekonstruktion, handkirurgi (sene/nerve/karskade, reimplantation).`
+  },
+  dermatologi: {
+    label: "Dermatologi",
+    color: "#fbbf24",
+    modules: ["ABCDE-melanom","Psoriasis","PASI","Eksem","Biologika"],
+    prompt: `Du er specialiseret i dermatologi og hudsygdomme. Du kender:
+CANCER: melanom (ABCDE-kriteriet, Breslow-tykkelse, Clark-niveau, AJCC-stadiering, sentinel lymfeknude, immunterapi/targeted therapy), basalcellecarcinom (BCC), planocellulært karcinom (SCC – Mohs-kirurgi), aktinisk keratose, bowens sygdom.
+INFLAMMATORISK: psoriasis (plaque/guttata/pustulosa/erytrodermi, PASI-score 0-72, biologika: TNF-hæmmere/IL-17/IL-23 hæmmere), atopisk dermatit (EASI, SCORAD, POEM, lokale steroider, tacrolimus, dupilumab), rosacea, seborrøisk dermatit.
+INFEKTIØS: impetigo, erysipelas, cellulitis, MRSA, herpes (simplex/zoster), tinea (dermatofytter – antifungal), scabies, pedikulose.
+ALLERGI: kontaktallergi (epikutantest – lappetests), urticaria (akut/kronisk – antihistamin, omalizumab), angioødem, anafylaksi.
+DIAGNOSTIK: dermatoskopi, biopsi (punch/excision), KOH-præparat, Wood's lampe.`
+  },
+  reumatologi: {
+    label: "Reumatologi",
+    color: "#c084fc",
+    modules: ["DAS28","CRP/CCP","Methotrexat","Biologika","Steroid"],
+    prompt: `Du er specialiseret i reumatologi. Du kender:
+DIAGNOSER: reumatoid artrit (RA – ACPA/anti-CCP, RF, DAS28, ACR/EULAR-kriterier), psoriasisartrit (PsA), ankyloserende spondylitis (AS/axSpA – ASDAS, BASDAI, HLA-B27), systemisk lupus erythematosus (SLE – ACR/EULAR-kriterier, dsDNA, komplement), Sjögrens syndrom, systemisk sklerose (Scl-70/centromere), vaskulitis (GCA – temporalisarteriit/PMR, ANCA-vaskulitis: GPA/MPA/EGPA), reaktiv artrit, gigt (urat-gigt – hyperurikæmi, serum urat, colchicin, allopurinol, febuxostat).
+BEHANDLING: NSAID, kortikosteroider (systemisk/intraartikulær), MTX (methotrexat), HCQ (hydroxyklorokin), sulfasalazin, leflunomid, biologika (TNF-hæmmere: adalimumab/etanercept/infliximab, IL-6: tocilizumab/sarilumab, IL-17: secukinumab, CD20: rituximab, CTLA-4: abatacept), JAK-hæmmere (tofacitinib, baricitinib, upadacitinib).`
+  },
+  endokrinologi: {
+    label: "Endokrinologi – Diabetes",
+    color: "#67e8f9",
+    modules: ["HbA1c","Insulin","DKA","Thyreoidea","Binyrebarkinsufficiens"],
+    prompt: `Du er specialiseret i endokrinologi og metaboliske sygdomme. Du kender:
+DIABETES: T1DM (autoimmun, insulin-afhængig, C-peptid, GAD-antistoffer), T2DM (insulinresistens, HbA1c >48 mmol/mol), MODY, GDM. Behandling: insulin (basal/bolus, analoger – glargin, degludec, lispro, aspart), GLP-1 (semaglutid, liraglutid), SGLT-2 (empagliflozin, dapagliflozin), DPP-4 (sitagliptin), metformin.
+KOMPLIKATIONER: hypoglykæmi (<4,0 mmol/L – behandling, glucagon), DKA (diabetisk ketoacidose – ketoner, pH, insulin + glucose + kalium-protokol), HHS (hyperglykæmisk hyperosmolær syndrom).
+THYREOIDEA: hypothyreose (TSH↑, T4↓ – levothyroxin), hyperthyreose/Graves (TSH↓, TRAK, thionamider, radioiod, thyreoidektomi), thyreoideasygdomme under graviditet, thyreoideascan, FNA.
+BINYRER: primær binyrebarkinsufficiens/Addisons (kortisol↓, ACTH↑, hyponatremi, hyperkaliæmi – hydrokortison, fludrokortison, stressreaktion), Cushings syndrom (kortisol↑, ACTH-afhængig/uafhængig, dexamethason-suppression), feokromocytom.
+KNOGLE: osteoporose (DEXA, T/Z-score, FRAX, behandling – calcium, D-vitamin, bisfosfonater, denosumab, teriparatid), Pagets sygdom.`
+  },
+  privat_almen: {
+    label: "Privat – Almen praksis",
+    color: "#94a3b8",
+    modules: ["ICPC-2","Epikrise","Receptudstedelse","Henvisning","Kronisk sygdom"],
+    prompt: `Du er en dansk praktiserende læge i almen praksis. Du kender:
+KODESYSTEM: ICPC-2 (International Classification of Primary Care), SKS-koder, SNOMED.
+KONSULTATION: anamnese (HOPC – History of Present Complaint, tidligere sygdomme, medicin, allergi, familie, social), objektiv undersøgelse, diagnostik, behandling, opfølgning.
+KRONISKE SYGDOMME: diabetes (kronikertjek, øjenlæge, fodterapeut), KOL (spirometri, GOLD-klassifikation, behandlingsplan), hjertesvigt (NYHA, medicin), hypertension (behandlingsmål, kombination), hyperlipidæmi (LDL-mål, statiner, PCSK9-hæmmere), astma (stepwise behandling, inhalationsteknik).
+RECEPTUDSTEDELSE: Fælles Medicinkort (FMK), kontrollerede stoffer (metadon, morfin – krav), CAVE.
+ATTESTER: lægeattest, sygemelding, kørekort, speciallægeerklæring.`
+  },
+  privat_onh: {
+    label: "ØNH Privatklinik",
+    color: "#94a3b8",
+    modules: ["Audiometri","Rhinoskopi","Laryngoskopi","Cerumen","Attest"],
+    prompt: `Du er øre-næse-hals-speciallæge i privat praksis. Du dokumenterer klinisk præcist til EPJ/journalsystem og attester. Du kender al ØNH-terminologi (se ØNH-specialet ovenfor) og skriver kortfattede, faktuelle notater tilpasset privat klinik-kontekst.`
+  },
+  privat_ortopædi: {
+    label: "Ortopæd Privatklinik",
+    color: "#94a3b8",
+    modules: ["VAS","MRI","Injektionsbehandling","Attest","Operationsindikation"],
+    prompt: `Du er ortopædkirurg i privat praksis. Du dokumenterer til EPJ, forsikringsattester og operationsindikationer. Du kender al ortopædi-terminologi og skriver kortfattede, klinisk præcise notater tilpasset privat klinik.`
+  },
+  privat_psykolog: {
+    label: "Privat Psykolog / Psykiater",
+    color: "#94a3b8",
+    modules: ["ICD-11","PHQ-9","GAD-7","Behandlingsplan","Journalnotat"],
+    prompt: `Du er psykolog eller psykiater i privatklinik. Du kender:
+DIAGNOSTIK: ICD-11, DSM-5. Scoringer: PHQ-9 (depression 0-27), GAD-7 (angst 0-21), PCL-5 (PTSD), MDQ (bipolar screening), AUDIT (alkohol), DAST (stofbrug).
+BEHANDLING: KAT (kognitiv adfærdsterapi), psykodynamisk terapi, EMDR, ACT, DBT, psykofarmaka (i samarbejde med psykiater), psykoedukation.
+JOURNALNOTAT: sessionsbeskrivelse (præsentation, indhold, interventioner, patientens respons), behandlingsplan, mål, næste session.`
+  },
+  privat_fysio: {
+    label: "Privat Fysioterapi",
+    color: "#94a3b8",
+    modules: ["VAS/NRS","Funktionstest","Behandlingsplan","Genoptræning","Attest"],
+    prompt: `Du er fysioterapeut i privatklinik. Du kender:
+VURDERING: subjectivt (SOAP – Subjektiv, Objektiv, Analyse, Plan), VAS/NRS smertescore, ROM (range of motion), muskeltest (MRC-skala 0-5), specifikke tests (Lasegue, Phalen, Hawkins, Neer, Lachmand, anterior drawer).
+BEHANDLING: manuel terapi, ultralydsbehandling, TENS, dry needling, kinesiotaping, styrketræning, proprioception, hjemmeøvelser.
+JOURNALNOTAT: henvisningsdiagnose, fund ved undersøgelse, behandlingsplan (antal sessioner, mål), kortfattet sessionsbeskrivelse, evaluering af fremgang.`
+  },
+  privat_tandlæge: {
+    label: "Tandklinik",
+    color: "#94a3b8",
+    modules: ["DMFT","Parodontitis","Implantat","Røntgen","Anæstesi"],
+    prompt: `Du er tandlæge i privatklinik. Du kender:
+DIAGNOSTIK: DMFT/DMFS-indeks (caries-status), parodontit (BPE-score 0-4, pocketdybde, blødning ved sondering, PPD, CAL, furkaturinvolvering), periapikalt (PA-røntgen, CBCT), okklusalt, TMD (kæbeled).
+BEHANDLING: tandfyldning (komposit, amalgam, inlay/onlay), rodbehandling (RBH – pulpitis, parodontale infektioner, apikal parodontitis), ekstraktion, tandprotese (bro, partiel/total protese), implantat (osseointegration, opbygning, krone), parodontalbehandling (scaling/root planning, kirurgi), bleaching.
+ANÆSTESI: lokalbedøvelse (lidokain, artikain, bupivakain – teknik: infiltration, blokade, intraligamentær).
+JOURNALNOTAT: kort, faktuel beskrivelse af fund, udført behandling, plan for næste besøg, patientinformation givet.`
+  }
+};
+
+const FAGRUPPE_INSTRUKS = {
+  sosu: "Skriv fra en SOSU-assistents perspektiv. Fokus på pleje, ADL-hjælp, observation, ernæring, hygiejne og dokumentation.",
+  sygeplejerske: "Skriv fra en sygeplejerskes perspektiv. Fokus på sygeplejediagnose, klinisk vurdering, intervention, medicinhåndtering og evaluering.",
+  laege: "Skriv fra en læges perspektiv. Fokus på medicinsk diagnose, differentialdiagnoser, behandlingsplan, ordinationer og epikrise.",
+  fysio: "Skriv fra en fysioterapeuts perspektiv. Fokus på funktionsvurdering, mobilisering, træningsplan og genoptræning.",
+  ergo: "Skriv fra en ergoterapeuts perspektiv. Fokus på ADL-vurdering, kognitive funktioner, hjælpemidler og hverdagsaktiviteter.",
+  jordemoder: "Skriv fra en jordemoders perspektiv. Fokus på fødsel, post partum, amning, CTG-tolkning og neonatal vurdering.",
+  portør: "Skriv fra en portørkoordinators perspektiv. Fokus på transport, logistik, smittehensyn og koordinering af patientforflytninger.",
+  bioanalytiker: "Skriv fra en bioanalytikers perspektiv. Fokus på prøvetagning, analyser, referenceværdier og laboratoriesvar.",
+  radiograf: "Skriv fra en radiografs perspektiv. Fokus på billeddiagnostik, modalitet, undersøgelsesforberedelse og strålebeskyttelse.",
+  farmaceut: "Skriv fra en farmaceut/farmakonoms perspektiv. Fokus på medicingennemgang, interaktioner, bivirkninger og korrekt administration.",
+  sosu_hjemme: "Skriv fra en SOSU-assistents perspektiv i hjemmepleje. Fokus på observation i eget hjem, ADL-hjælp, medicin, sårpleje og dokumentation til kommunalt system."
+};
+
+const DOC_FORMAT = {
+  plejeplan: `Formatér som FIDO-plejeplan:
+
+F – FOKUS
+[Problemidentifikation – hvad er patientens primære sygeplejebehov?]
+
+I – INFORMATION
+[Baggrund og årsag til fokus]
+
+D – DIAGNOSE/MÅL
+[Sygeplejediagnose og konkret målsætning]
+
+O – OBSERVATION/INTERVENTION
+• [Handlinger og opfølgning i punktform]`,
+  statusnotat: `Formatér som klinisk statusnotat:
+
+AKTUEL TILSTAND
+[Patientens nuværende status]
+
+OBJEKTIVE FUND
+[Vitalparametre og kliniske fund]
+
+VURDERING
+[Klinisk tolkning]
+
+PLAN
+[Næste tiltag]`,
+  overflytning: `Formatér som overflytningsnotat (ISBAR):
+
+I – IDENTIFIKATION
+[Patient, CPR, afdeling]
+
+S – SITUATION
+[Årsag til overflytning]
+
+B – BAGGRUND
+[Relevant sygehistorie og forløb]
+
+A – ANALYSE
+[Din kliniske vurdering]
+
+R – RÅD
+[Hvad modtagende afdeling skal være opmærksom på]`,
+  epikrise: `Formatér som epikrise:
+
+INDLÆGGELSESÅRSAG OG -DATO
+
+FORLØB UNDER INDLÆGGELSE
+
+BEHANDLING OG RESULTATER
+
+UDSKRIVELSESTILSTAND
+
+ORDINATIONER VED UDSKRIVELSE
+
+OPFØLGNING OG PLAN`,
+  triagering: `Formatér som triageringsnotat:
+
+ANKOMST
+[Tidspunkt og ankomstmåde]
+
+KLAGE
+[Primær problemstilling]
+
+VITALPARAMETRE
+[BT, P, SAT, temp, RR, GCS/NEWS2]
+
+TRIAGEKATEGORI
+[Kategori og begrundelse]
+
+IVÆRKSAT HANDLING`,
+  medicinnotat: `Formatér som medicinnotat:
+
+AKTUEL MEDICIN
+[Medicin og doser]
+
+ÆNDRINGER
+[Seponering / opstart / dosisændring]
+
+BEGRUNDELSE
+
+CAVE OG ALLERGIER
+
+P.N.-MEDICIN`,
+  obs: `Formatér som observationsnotat:
+
+TIDSPUNKT:
+OBSERVATION:
+KLINISK VURDERING:
+HANDLING OG OPFØLGNING:`,
+  konference: `Formatér som konferencenotat:
+
+PATIENT OG PROBLEMSTILLING
+
+PRÆSENTERET AF
+
+TILSTEDEVÆRENDE FAGGRUPPER
+
+DRØFTELSE
+
+BESLUTNING OG PLAN`,
+  samtale: `Formatér som patientsamtalenotat:
+
+SAMTALENS FORMÅL
+
+PATIENTENS OPLEVELSE OG ØNSKER
+
+INFORMATION GIVET
+
+AFTALER OG PLAN`,
+  udskrivelse: `Formatér som udskrivelsesnotat:
+
+INDLÆGGELSESPERIODE
+
+DIAGNOSE(R) VED UDSKRIVELSE
+
+BEHANDLING UNDER INDLÆGGELSE
+
+TILSTAND VED UDSKRIVELSE
+
+MEDICIN VED UDSKRIVELSE
+
+OPFØLGNING`,
+  fritekst: `Strukturér og forbedre teksten til klinisk, EPJ-klar dansk. Bevar alle kliniske oplysninger. Tilpas fagsprog til den valgte faggruppe og specialet.`
+};
+
+const NIVEAU_INSTRUKS = {
+  faglig: "Skriv i fagligt, klinisk dansk klar til direkte indsætning i EPJ. Brug kliniske forkortelser (forklar første gang). Ingen fyldtekst.",
+  let: "Skriv i let, forståeligt dansk beregnet til pårørende eller patient. Undgå fagtermer – forklar på hverdagssprog.",
+  kort: "Skriv meget kortfattet i bullet-form. Kun de vigtigste punkter. Maksimalt 10 linjer.",
+  udvidet: "Skriv detaljeret og fyldestgørende. Inkludér alle relevante kliniske detaljer, differentialdiagnoser og nuancer."
+};
+
+// ─── STATE ──────────────────────────────────────────────────────
+let currentSpec = 'neurologi_stroke';
+let apiKey = localStorage.getItem('klinikai_apikey') || '';
+let recognition = null;
+let isRecording = false;
+
+// ─── INIT ───────────────────────────────────────────────────────
+window.onload = () => {
+  updateBadges();
+  updateApiBadge();
+};
+
+function toggleGroup(el) {
+  el.classList.toggle('open');
+}
+
+function setSpec(spec) {
+  currentSpec = spec;
+  document.querySelectorAll('.spec-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-spec="${spec}"]`)?.classList.add('active');
+  const s = SPECS[spec];
+  document.getElementById('specChip').textContent = `⚕ ${s.label}`;
+  updateBadges();
+}
+
+function updateBadges() {
+  const s = SPECS[currentSpec];
+  if (!s) return;
+  const colors = ['#E1F5EE:#0F6E56','#E6F1FB:#185FA5','#EEEDFE:#534AB7','#FAEEDA:#854F0B','#FAECE7:#993C1D','#EAF3DE:#3B6D11','#fce7f3:#9d174d'];
+  const badges = document.getElementById('modulesBadges');
+  badges.innerHTML = s.modules.map((m, i) => {
+    const [bg, col] = colors[i % colors.length].split(':');
+    return `<span class="mod-badge" style="background:${bg};color:${col}">${m}</span>`;
+  }).join('');
+}
+
+function updateCount() {
+  const len = document.getElementById('inputText').value.length;
+  document.getElementById('charCount').textContent = `${len} tegn`;
+}
+
+// ─── MIC ────────────────────────────────────────────────────────
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Din browser understøtter ikke talegenkendelse. Prøv Chrome.');
+    return;
+  }
+  if (isRecording) {
+    stopMic();
+  } else {
+    startMic();
+  }
+}
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'da-DK';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  let finalTranscript = document.getElementById('inputText').value;
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('inputText').value = finalTranscript + interim;
+    updateCount();
+  };
+
+  recognition.onerror = () => stopMic();
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+
+  recognition.start();
+  isRecording = true;
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micLabel').textContent = 'Stop';
+}
+
+function stopMic() {
+  if (recognition) recognition.stop();
+  isRecording = false;
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('micLabel').textContent = 'Dikter';
+}
+
+// ─── GENERATE (STREAMING) ───────────────────────────────────────
+async function generate() {
+  const input = document.getElementById('inputText').value.trim();
+  if (!input) { showStatus('Skriv eller dikter noget tekst først.', 'error'); return; }
+  if (!apiKey) { openModal(); return; }
+  if (isRecording) stopMic();
+
+  const spec = SPECS[currentSpec];
+  const fg = document.getElementById('faggruppe').value;
+  const doc = document.getElementById('doctype').value;
+  const niv = document.getElementById('niveau').value;
+
+  const systemPrompt = [
+    spec.prompt,
+    `\nFAGGRUPPE: ${FAGRUPPE_INSTRUKS[fg]}`,
+    `\nDOKUMENTFORMAT:\n${DOC_FORMAT[doc]}`,
+    `\nSPROGNIVEAU: ${NIVEAU_INSTRUKS[niv]}`,
+    `\nVIGTIGT: Skriv altid på korrekt dansk. Brug etablerede kliniske forkortelser, men forklar dem første gang de optræder. Teksten skal være klar til direkte indsætning i dansk EPJ (Nexus, KIWI, Columna eller tilsvarende). Ingen introduktionstekst, ingen forklaring – gå direkte til dokumentet.`
+  ].join('\n');
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Genererer...';
+
+  const outputCard = document.getElementById('outputCard');
+  const outputEl = document.getElementById('outputContent');
+  outputCard.classList.add('visible');
+  outputEl.innerHTML = '<span class="cursor-blink"></span>';
+
+  showStatus('Genererer klinisk dokumentation...', 'working');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1500,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: `Strukturér og formatér følgende kliniske råtekst:\n\n${input}` }]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          if (json.type === 'content_block_delta' && json.delta?.text) {
+            fullText += json.delta.text;
+            outputEl.innerHTML = escapeHtml(fullText) + '<span class="cursor-blink"></span>';
+            outputEl.parentElement.scrollTop = outputEl.scrollHeight;
+          }
+        } catch {}
+      }
+    }
+
+    outputEl.innerHTML = escapeHtml(fullText);
+    showStatus('Færdig — klar til kopiering i EPJ', 'done');
+
+  } catch (e) {
+    outputEl.textContent = 'Fejl: ' + e.message;
+    showStatus('Fejl: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('span').textContent = 'Generer klinisk dokumentation';
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function showStatus(msg, type) {
+  const bar = document.getElementById('statusBar');
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  bar.style.display = 'flex';
+  dot.className = 'status-dot ' + (type || '');
+  text.textContent = msg;
+}
+
+function copyOutput() {
+  const text = document.getElementById('outputContent').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showStatus('Kopieret til udklipsholder', 'done');
+    setTimeout(() => showStatus('Færdig — klar til kopiering i EPJ', 'done'), 2000);
+  });
+}
+
+function clearOutput() {
+  document.getElementById('outputContent').innerHTML = '';
+  document.getElementById('outputCard').classList.remove('visible');
+  document.getElementById('statusBar').style.display = 'none';
+}
+
+// ─── API MODAL ──────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('apiInput').value = apiKey;
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('apiInput').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function saveKey() {
+  const key = document.getElementById('apiInput').value.trim();
+  if (!key) return;
+  apiKey = key;
+  localStorage.setItem('klinikai_apikey', key);
+  updateApiBadge();
+  closeModal();
+}
+
+function updateApiBadge() {
+  const badge = document.getElementById('apiBadge');
+  if (apiKey) {
+    badge.textContent = '✓ API tilsluttet';
+    badge.classList.add('connected');
+  } else {
+    badge.textContent = '⚙ API-nøgle';
+    badge.classList.remove('connected');
+  }
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+document.getElementById('apiInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveKey();
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─── PWA ────────────────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBar').classList.add('show');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('installBar').classList.remove('show');
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
